@@ -6,8 +6,8 @@
 //################# Adjustable Settings ####################
 //Arduino Testing
 int testMode = 1;  //Set testMode=1 to test LED strip without using the signal from the coil pack, set testMode=0 when using RPM signal from coil pack
-int testPR = 0;
-int testRPM = 1;
+int testPR = 1;
+int testRPM = 0;
 //Adjustable LED colors [colors follow RGB color code, 0-255] - Try to keep the sum of the 3 numbers for each color around 255 for 
 //even brightness between the three colors (ex yellow code is 255,255,0 - divide each number by 2 to get 125+125+0=250)
 int color1[] = {0,0,255};   //Color 1, Blue
@@ -16,17 +16,16 @@ int color3[] = {255,0,0};   //Color 3, Red
 int flash_speed = 10; //Can be increased or decreased to adjust flash speed (flashes when shift RPM is exceeded)
 //LED Brightness Control
 int brightness_response_time = 500;  //LED brightness response time (lower number responds more quickly to ambient light, higher number is more stable during high variation of ambient light brightness)
-int min_bright = 10;  //min LED brightness (any value from 1 to max_bright)
+int min_bright = 25;  //min LED brightness (any value from 1 to max_bright)
 int max_bright = 200; //max LED brightness (any value from min_bright to 255)
-float max_PR = 950.0;  //Photoresistor voltage at max daylight (direct sunlight)
-float min_PR = 200.0; //Photoresistor voltage at night
+float max_PR = 550.0;  //Photoresistor voltage at max daylight (direct sunlight)
+float min_PR = 10.0; //Photoresistor voltage at night
 //RPM control, adjustable
 int on_rpm = 3000;  //RPM at which the LED's begin to turn on
-int shift_rpm = 5700; //Desired shift point, initiates flashing LEDS
+int shift_rpm = 6000; //Desired shift point, initiates flashing LEDS. Must be higher than on_rpm
 //RPM Calibration | y = m*x + b
-int m = 19.2;  //Slope of trendline
-int b = -45;  //Y-intercept of trendline
-
+int m = 22.315;  //Slope of trendline
+int b = -66.2;  //Y-intercept of trendline
 
 //############### Setup, DO NOT ADJUST #####################
 int x = 5;   //RPM simulator counter / Test Mode
@@ -45,7 +44,7 @@ int flash_count = 0;
 int flash_counter = 1;
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 movingAvg photoCell(brightness_response_time); //averages photoresistor voltage over last 500 readings
-movingAvg rpmMovingAve(30); // averages rpm voltage over last 30 readings (to smooth out the signal)
+movingAvg rpmMovingAve(15); // averages rpm voltage over last 30 readings (to smooth out the signal)
 
 
 //############### Void Setup - runs once when powered on #####################
@@ -53,10 +52,10 @@ void setup() {
   Serial.begin(115200);
   strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();            // Turn OFF all pixels ASAP
-  pinMode(PR_pin,INPUT);
-  pinMode(RPM_pin, INPUT);
-  photoCell.begin();
-  rpmMovingAve.begin();
+  pinMode(PR_pin,INPUT);  //establishes photoresistor pin
+  pinMode(RPM_pin, INPUT);  // establishes RPM pin
+  photoCell.begin();   //begins photoresistor moving average
+  rpmMovingAve.begin();   //begins rpm moving average
 }
 
 
@@ -178,7 +177,6 @@ void loop() {
   }
   
   strip.show(); //Update LED strip with current configuration
-  delay(5); //5ms delay
+  delay(1); //1ms delay
 }
-
   
